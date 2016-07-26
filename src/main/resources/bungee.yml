@@ -1,0 +1,4 @@
+name: BungeePlayer
+version: 1.0
+author: MCShovel
+main: com.steamcraftmc.bungee.BungeePlugin
