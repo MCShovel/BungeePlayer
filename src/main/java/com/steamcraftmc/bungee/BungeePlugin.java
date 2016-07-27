@@ -1,45 +1,43 @@
-package com.steamcraftmc.bungeetime;
+package com.steamcraftmc.bungee;
 
 import com.google.common.io.ByteStreams;
-import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.ServerPing;
-import net.md_5.bungee.api.connection.PendingConnection;
-import net.md_5.bungee.api.event.PreLoginEvent;
-import net.md_5.bungee.api.event.ProxyPingEvent;
+import com.steamcraftmc.bungee.utils.MySql;
+
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
-import net.md_5.bungee.event.EventHandler;
-import net.md_5.bungee.event.EventPriority;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetSocketAddress;
-import java.util.Set;
 import java.util.logging.Level;
 
-/**
- * @author EDawg878 <EDawg878@gmail.com>
- */
-public class BungeeTimePlugin extends Plugin implements Listener {
+public class BungeePlugin extends Plugin implements Listener {
 
     private static final ConfigurationProvider configProvider = ConfigurationProvider.getProvider(YamlConfiguration.class);
-    private Set<String> validHostNames;
-    private String warning;
-    private boolean ignoreCase;
-    private boolean blockLegacy;
+    public Configuration config;
+    public MySql sql;
 
     @Override
     public void onEnable() {
         reloadConfig();
+        
+        try {
+        	sql.initSchema();
+        }
+        catch(Exception e) {
+        	getLogger().log(Level.SEVERE, "Unable to create schema: " + e.toString());
+        	return;
+        }
+        
         PluginManager pm = getProxy().getPluginManager();
         pm.registerCommand(this, new BungeeCommand(this));
-        pm.registerListener(this, this);
+        pm.registerCommand(this, new SeenCommand(this));
+        pm.registerListener(this, new BungeeEvents(this));
+        getProxy().setReconnectHandler(new BungeeReconnect(this));
     }
 
     public void reloadConfig() {
@@ -49,35 +47,19 @@ public class BungeeTimePlugin extends Plugin implements Listener {
                 getDataFolder().mkdirs();
                 file.createNewFile();
                 try (InputStream in = getResourceAsStream("config.yml");
-                     FileOutputStream out = new FileOutputStream(file)) {
+                    FileOutputStream out = new FileOutputStream(file)) {
                     ByteStreams.copy(in, out);
                 }
             }
-            Configuration config = configProvider.load(file);
-            warning = ChatColor.translateAlternateColorCodes('&', config.getString("warning"));
-            ignoreCase = config.getBoolean("ignore-case", true);
-            validHostNames = Util.getHostNames(config.getStringList("allowed-host-names"), ignoreCase);
-            blockLegacy = config.getBoolean("block-legacy", true);
-        } catch (IOException e) {
+            
+            config = configProvider.load(file);
+            if (sql != null) {
+            	sql.closeConnection();
+            }
+        	sql = new MySql(this);
+        	
+            } catch (IOException e) {
             getLogger().log(Level.SEVERE, "Error loading configuration", e);
-        }
-    }
-
-    @EventHandler
-    public void onPreLogin(PreLoginEvent event) {
-        if (isBlocked(event.getConnection())) {
-            event.setCancelled(true);
-            event.setCancelReason(warning);
-        }
-    }
-
-    private boolean isBlocked(PendingConnection conn) {
-        InetSocketAddress address = conn.getVirtualHost();
-        if (conn.isLegacy() || address == null) {
-            return blockLegacy;
-        } else {
-            String hostname = ignoreCase ? address.getHostName().toLowerCase() : address.getHostName();
-            return !validHostNames.contains(hostname);
         }
     }
 
