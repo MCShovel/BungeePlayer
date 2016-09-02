@@ -222,7 +222,7 @@ public class MySql {
         }
 	}
 
-	public PlayerNameInfo[] FindPlayersByName(String name) {
+	public PlayerNameInfo[] FindPlayersByName(boolean seeHidden, String name) {
 		name = String.valueOf(name).replaceAll("[^\\w]", "_");
 		ArrayList<PlayerNameInfo> found = new ArrayList<>();
 		ArrayList<PlayerNameInfo> exact = null;
@@ -235,13 +235,15 @@ public class MySql {
             
         	while (rs.next()) {
         		PlayerNameInfo pni = new PlayerNameInfo(rs);
-        		
-        		found.add(pni);
-        		if (pni.name.equalsIgnoreCase(name)) {
-        			if (exact == null) {
-        				exact = new ArrayList<PlayerNameInfo>();
-        			}
-        			exact.add(pni);
+
+        		if (seeHidden || !plugin.isHidden(pni.name)) {
+	        		found.add(pni);
+	        		if (pni.name.equalsIgnoreCase(name)) {
+	        			if (exact == null) {
+	        				exact = new ArrayList<PlayerNameInfo>();
+	        			}
+	        			exact.add(pni);
+	        		}
         		}
             }
             rs.close();

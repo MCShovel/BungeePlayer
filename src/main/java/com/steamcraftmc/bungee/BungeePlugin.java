@@ -1,7 +1,11 @@
 package com.steamcraftmc.bungee;
 
 import com.google.common.io.ByteStreams;
-import com.steamcraftmc.bungee.utils.MySql;
+import com.steamcraftmc.bungee.utils.*;
+
+import java.io.*;
+import java.util.*;
+import java.util.logging.Level;
 
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
@@ -9,11 +13,6 @@ import net.md_5.bungee.api.plugin.PluginManager;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.logging.Level;
 
 public class BungeePlugin extends Plugin implements Listener {
 
@@ -38,6 +37,7 @@ public class BungeePlugin extends Plugin implements Listener {
         pm.registerCommand(this, new SeenCommand(this));
         pm.registerListener(this, new BungeeEvents(this));
         getProxy().setReconnectHandler(new BungeeReconnect(this));
+        pm.registerListener(this, new TabComplete(this));
     }
 
     public void reloadConfig() {
@@ -53,6 +53,7 @@ public class BungeePlugin extends Plugin implements Listener {
             }
             
             config = configProvider.load(file);
+            hiddenPlayers = null;
             if (sql != null) {
             	sql.closeConnection();
             }
@@ -62,5 +63,18 @@ public class BungeePlugin extends Plugin implements Listener {
             getLogger().log(Level.SEVERE, "Error loading configuration", e);
         }
     }
+    
+    private Set<String> hiddenPlayers;
 
+	public boolean isHidden(String name) {
+		Set<String> hidden = this.hiddenPlayers;
+		if (hidden == null) {
+			hidden = new HashSet<String>();
+			for (String s : config.getStringList("hidden"))
+				hidden.add(s.toLowerCase());
+			this.hiddenPlayers = hidden;
+		}
+		
+		return name != null && hidden.contains(name.toLowerCase());
+	}
 }

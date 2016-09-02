@@ -20,3 +20,4 @@ public class PlayerNameInfo {
 	public final String name;
 	public final long firstJoin, lastJoin;
 }
+

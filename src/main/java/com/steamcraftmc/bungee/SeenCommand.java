@@ -29,7 +29,7 @@ public class SeenCommand extends Command {
     	}
     	
         if (args.length == 1 && args[0].length() >= 2) {
-        	PlayerNameInfo[] found = this.plugin.sql.FindPlayersByName(args[0]);
+			PlayerNameInfo[] found = this.plugin.sql.FindPlayersByName(cs.hasPermission("bplayer.show-hidden"), args[0]);
         	
         	if (found.length == 0) {
                 cs.sendMessage(new TextComponent(ChatColor.RED + "Unable to find a player by that name."));
@@ -44,6 +44,7 @@ public class SeenCommand extends Command {
 	        			if (sb.length() > 0) {
 	        				sb.append(", ");
 	        			}
+	        			
 	        			sb.append(p.name);
 	        		}
         		}
