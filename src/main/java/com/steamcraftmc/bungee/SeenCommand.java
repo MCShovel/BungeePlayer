@@ -1,7 +1,7 @@
 package com.steamcraftmc.bungee;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.*;
 
 import com.steamcraftmc.bungee.utils.PlayerNameInfo;
 import com.steamcraftmc.bungee.utils.PlayerStatsInfo;
@@ -11,9 +11,10 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
+import net.md_5.bungee.api.plugin.TabExecutor;
 import net.md_5.bungee.api.ProxyServer;
 
-public class SeenCommand extends Command {
+public class SeenCommand extends Command implements TabExecutor {
 
     private final BungeePlugin plugin;
 
@@ -143,5 +144,24 @@ public class SeenCommand extends Command {
         } else {
             cs.sendMessage(new TextComponent("Usage: /seen [player]"));
         }
+    }
+
+    @Override
+    public Iterable<String> onTabComplete(CommandSender sender, String[] args) {
+    	ArrayList<String> results = new ArrayList<String>();
+    	
+    	if ((args.length == 0 || (args.length == 1 && args[0].length() == 0)) 
+    			&& sender instanceof ProxiedPlayer) {
+    		results.add(((ProxiedPlayer)sender).getName());
+    	}
+    	else if (args.length == 1 && args[0].length() >= 2) {
+			PlayerNameInfo[] found = this.plugin.sql.FindPlayersByName(sender.hasPermission("bplayer.show-hidden"), args[0]);
+        	
+			for (PlayerNameInfo p : found) {
+				results.add(p.name);
+			}
+    	}
+    	
+    	return results;
     }
 }
