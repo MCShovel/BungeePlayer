@@ -8,3 +8,10 @@ mysql:
   password: password
   database: bungeeplayer
   tablePrefix: 'bplayer_'
+
+hidden:
+  - some-player-name
+
+settings:
+  ignore-port: false
+  ignore-numbers: false

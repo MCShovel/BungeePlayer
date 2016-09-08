@@ -19,6 +19,7 @@ public class MySql {
     private String password;
     private String database;
     private String tablePrefix;
+	private boolean ignorePorts, ignoreNumbers;
 
     private Connection conn;
 
@@ -35,6 +36,9 @@ public class MySql {
         this.password = plugin.config.getString("mysql.password", "password");
         this.database = plugin.config.getString("mysql.database", "bungeeplayer");
         this.tablePrefix = plugin.config.getString("mysql.tablePrefix", "bplayer_");
+
+        ignorePorts = plugin.config.getBoolean("settings.ignore-port", false);
+        ignoreNumbers = plugin.config.getBoolean("settings.ignore-numbers", false);
         closeConnection();
 	}
 
@@ -121,7 +125,15 @@ public class MySql {
 
 	public void storeLastServer(UUID uniqueId, String hostString, int port, String serverName) {
 
+		if (this.ignorePorts) {
+			port = 25565;
+		}
+
 		hostString = String.valueOf(hostString).replaceAll("[^\\w\\.\\-]", "_");
+		if (this.ignoreNumbers) {
+			hostString = String.valueOf(hostString).replaceAll("\\d+\\.", "\\.");
+		}
+
         try {
         	String now = String.valueOf(System.currentTimeMillis());
         	exec("INSERT INTO " + tablePrefix + "connections " +
@@ -145,7 +157,15 @@ public class MySql {
 
 	public String getLastServer(UUID uniqueId, String hostString, int port) {
 
+		if (this.ignorePorts) {
+			port = 25565;
+		}
+
 		hostString = String.valueOf(hostString).replaceAll("[^\\w\\.\\-]", "_");
+		if (this.ignoreNumbers) {
+			hostString = String.valueOf(hostString).replaceAll("\\d+\\.", "\\.");
+		}
+
         try {
         	ResultSet rs = getResult("SELECT `bpc_lastServer` FROM " + tablePrefix + "connections " +
         		"WHERE `bpc_playerUUID` = '" + uniqueId.toString() + "' " +
