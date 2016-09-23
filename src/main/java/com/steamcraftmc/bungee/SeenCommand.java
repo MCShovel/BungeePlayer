@@ -106,6 +106,7 @@ public class SeenCommand extends Command implements TabExecutor {
         				new SimpleDateFormat("MMM d, yyyy hh:mm aaa").format(new Date(ps != null ? ps.lastSeen : pn.lastJoin)));
 
         		if (alias.length > 1) {
+        			sb.append('\n');
             		sb.append(ChatColor.GOLD);
             		sb.append("Previous name(s): ");
             		sb.append(ChatColor.GRAY);
