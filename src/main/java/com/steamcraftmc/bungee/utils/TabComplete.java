@@ -72,7 +72,7 @@ public class TabComplete implements Listener {
 			if (fullText.startsWith("/")) {
 				String[] args = fullText.substring(1).split("\\s+");
 				if (args.length > 1) {
-					String last = args[args.length - 1];
+					String last = args[args.length - 1].toLowerCase();
 					if (last.length() >= 2) {
 						for (ProxiedPlayer p : ProxyServer.getInstance().getPlayers()) {
 							String pname = p.getName().toLowerCase();
